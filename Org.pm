@@ -11,18 +11,25 @@ sub format_entry {
         tags => [],
         @_);
 
-    my $max_title_length = 80; # TODO: move out
+    my $max_title_length = 80; # TODO: move out as a parameter
 
-    my $title = join ' ', $p{todo_keyword}, $p{title};
+    my $title = $p{title};
+    $title =  join ' ', $p{todo_keyword}, $title if $p{todo_keyword};
 
     my $tags = join ':', @{ $p{tags} };
     $tags = " :$tags:" if $tags;
 
     my $padding = $max_title_length - (length $title) - (length $tags);
+    $padding = 0 unless $tags;
 
-    chomp $p{body};
+    my $body = $p{body};
+    chomp $body;
 
-    return $title . (' ' x $padding) . $tags . "\n" . $p{body} . "\n";
+    my $formatted = $title . (' ' x $padding) . $tags . "\n";
+    $formatted = $formatted . $body . "\n" if $body;
+
+    return  $formatted;
+}
 }
 
 
