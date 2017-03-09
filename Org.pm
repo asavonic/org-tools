@@ -30,6 +30,23 @@ sub format_entry {
 
     return  $formatted;
 }
+
+sub parse_entry {
+    my ($entry) = @_;
+
+    my %p;
+
+    $entry =~ /^((TODO|NEXT|DONE) )?(.*)\s*(:(.*):)?/;
+    $p{ todo_keyword } = $2 if $2;
+    $p{ title } = $3 if $3;
+    $p{ tags } = [split ':', $5] if $5;
+
+    return \%p unless %p;
+
+    $entry =~ /^.*\n((?s).*)/m;
+    $p{ body } = $1 if $1;
+
+    return \%p;
 }
 
 
