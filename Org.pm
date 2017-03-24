@@ -72,5 +72,35 @@ sub parse_entry {
     return \%parsed;
 }
 
+sub parse_file {
+  my ($file) = @_;
+
+  my @lines = split "\n", $file;
+  my @entries;
+  my @current_entry;
+  foreach my $line (@lines) {
+      if ($line =~ /\* (.*)/) {
+          # found header
+
+          # when header is reached it is either the first non-empty
+          # line, or it is an end of a current entry
+          if (@current_entry) {
+              # TODO: remove join, implement parse_entry for arrays
+              push @entries, parse_entry(join "\n", @current_entry);
+              splice(@current_entry);
+          }
+      }
+
+      push @current_entry, $line;
+  }
+
+  # handle the last entry as well
+  if (@current_entry) {
+      # TODO: remove join, implement parse_entry for arrays
+      push @entries, parse_entry(join "\n", @current_entry);
+  }
+
+  return \@entries;
+}
 
 1;

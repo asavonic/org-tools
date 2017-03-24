@@ -1,6 +1,6 @@
 use Org;
 
-use Test::More tests => 9;
+use Test::More tests => 14;
 
 my $entry = Org::format_entry( level => 2,
                                todo_keyword => "TODO",
@@ -64,3 +64,10 @@ test_vise_versa
 '* Awesome header
 ';
 
+my @entries = @{ Org::parse_file("* Title 1\nContent 1\nContent 1\n" .
+                                 "* Title 2\nContent 2\nContent 2\n") };
+is scalar @entries, 2, file_parse_count;
+is $entries[0]->{ title }, "Title 1", file_parse_1_title;
+is $entries[0]->{ body }, "Content 1\nContent 1", file_parse_1_body;
+is $entries[1]->{ title }, "Title 2", file_parse_2_title;
+is $entries[1]->{ body }, "Content 2\nContent 2", file_parse_2_body;
