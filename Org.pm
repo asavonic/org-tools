@@ -5,6 +5,7 @@ use autodie;
 
 sub format_entry {
     my %p = (
+        level => 1,
         todo_keyword => "",
         title => "",
         body => "",
@@ -13,19 +14,24 @@ sub format_entry {
 
     my $max_title_length = 80; # TODO: move out as a parameter
 
+    my $level = ('*' x $p{level}) . ' ';
+
     my $title = $p{title};
     $title =  join ' ', $p{todo_keyword}, $title if $p{todo_keyword};
 
     my $tags = join ':', @{ $p{tags} };
     $tags = " :$tags:" if $tags;
 
-    my $padding = $max_title_length - (length $title) - (length $tags);
+    my $padding =
+        $max_title_length - (length $level)
+        - (length $title) - (length $tags);
+
     $padding = 0 unless $tags;
 
     my $body = $p{body};
     chomp $body;
 
-    my $formatted = $title . (' ' x $padding) . $tags . "\n";
+    my $formatted =  $level . $title . (' ' x $padding) . $tags . "\n";
     $formatted = $formatted . $body . "\n" if $body;
 
     return  $formatted;
@@ -34,19 +40,36 @@ sub format_entry {
 sub parse_entry {
     my ($entry) = @_;
 
-    my %p;
+    my $entry_regex;
+    {
+        my $todo   = '(?P<todo>TODO|NEXT|DONE) ';
+        my $title  = '(?P<title>.*)';
+        my $tags   = ':(?P<tags>.*):';
+        my $body   = '(?P<body>(?s).*)';
+        my $level  = '(?P<level>\*+) ';
 
-    $entry =~ /^((TODO|NEXT|DONE) )?(.*)\s*(:(.*):)?/;
-    $p{ todo_keyword } = $2 if $2;
-    $p{ title } = $3 if $3;
-    $p{ tags } = [split ':', $5] if $5;
+        my $header = "^($level)($todo)?($title)\\s*($tags)?";
 
-    return \%p unless %p;
+        $entry_regex = "(($header\\n$body)|($body))";
+    }
 
-    $entry =~ /^.*\n((?s).*)/m;
-    $p{ body } = $1 if $1;
+    my %parsed;
 
-    return \%p;
+    if ($entry !~ $entry_regex) {
+        return \%parsed;
+    }
+
+    $parsed{ level }        = length $+{level};
+    $parsed{ todo_keyword } = $+{todo};
+    $parsed{ title }        = $+{title};
+    $parsed{ tags }         = $+{tags};
+    $parsed{ body }         = $+{body};
+
+    while ( my ( $key, $val ) = each %parsed ) {
+        delete $parsed{ $key } if not defined $val;
+    }
+
+    return \%parsed;
 }
 
 
