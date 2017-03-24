@@ -8,11 +8,11 @@ sub format_entry {
         level => 0,
         todo_keyword => "",
         title => "",
-        body => "",
         tags => [],
+        body => "",
         @_);
 
-    return %p{ body } unless %p{ level };
+    return %p{ body } unless $p{ level };
 
     my $max_title_length = 80; # TODO: move out as a parameter
 
@@ -75,32 +75,32 @@ sub parse_entry {
 }
 
 sub parse_file {
-  my ($file) = @_;
+  my ($file_str) = @_;
 
-  my @lines = split "\n", $file;
   my @entries;
   my @current_entry;
-  foreach my $line (@lines) {
+  my $flush_entry = sub {
+      if (@current_entry) {
+          # TODO: remove join, implement parse_entry for arrays
+          push @entries, parse_entry(join "\n", @current_entry);
+          splice(@current_entry);
+      }
+  };
+
+  foreach my $line (split "\n", $file_str) {
       if ($line =~ /\* (.*)/) {
           # found header
 
-          # when header is reached it is either the first non-empty
-          # line, or it is an end of a current entry
-          if (@current_entry) {
-              # TODO: remove join, implement parse_entry for arrays
-              push @entries, parse_entry(join "\n", @current_entry);
-              splice(@current_entry);
-          }
+          # when header is reached it is either the first entry in a
+          # file, or it is an end of a current entry
+          $flush_entry->();
       }
 
       push @current_entry, $line;
   }
 
   # handle the last entry as well
-  if (@current_entry) {
-      # TODO: remove join, implement parse_entry for arrays
-      push @entries, parse_entry(join "\n", @current_entry);
-  }
+  $flush_entry->();
 
   return \@entries;
 }
