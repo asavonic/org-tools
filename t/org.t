@@ -1,6 +1,6 @@
 use Org;
 
-use Test::More tests => 14;
+use Test::More tests => 16;
 
 my $entry = Org::format_entry( level => 2,
                                todo_keyword => "TODO",
@@ -12,6 +12,9 @@ like $entry, qr/\*\* TODO Awesome title \s* :T1:T2:\nSomething very cool/, basic
 
 my $header_line = (split /\n/, $entry)[0];
 is length $header_line, 80, header_line_max_length;
+
+is Org::format_entry( body => "Something very cool." ),
+   "Something very cool.", bare_body_entry;
 
 is Org::parse_entry("** Header\nBody")->{ level }, 2, parse_level;
 
@@ -62,6 +65,11 @@ test_vise_versa
 
 test_vise_versa
 '* Awesome header
+';
+
+test_vise_versa
+'Something.
+More.
 ';
 
 my @entries = @{ Org::parse_file("* Title 1\nContent 1\nContent 1\n" .

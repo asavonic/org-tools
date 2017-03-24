@@ -5,12 +5,14 @@ use autodie;
 
 sub format_entry {
     my %p = (
-        level => 1,
+        level => 0,
         todo_keyword => "",
         title => "",
         body => "",
         tags => [],
         @_);
+
+    return %p{ body } unless %p{ level };
 
     my $max_title_length = 80; # TODO: move out as a parameter
 
